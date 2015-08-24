@@ -732,12 +732,24 @@ lval* lval_call(lenv* e, lval* f, lval* a)
 	while (a->count) {
 		if (f->formals->count == 0) {
 			lval_del(a);
-			return lval_error(
-				"Function passed too many arguments. "
+			return lval_error("Function passed too many arguments. "
 				"Got %i, Expected %i.", given, total);
 		}
 
 		lval* sym = lval_pop(f->formals, 0);
+		if (strcmp(sym->symbol, "&") == 0) {
+			if (f->formals->count != 1) {
+				lval_del(a);
+				return lval_error("Function format invalid. "
+	  				"Symbol '&' not followed by single symbol.");
+			}
+
+			lval* nsym = lval_pop(f->formals, 0);
+			lenv_put(f->env, nsym, builtin_list(e, a));
+			lval_del(sym); lval_del(nsym);
+			break;
+		}
+
 		lval* val = lval_pop(a, 0);
 		lenv_put(f->env, sym, val);
 		lval_del(sym); lval_del(val);
@@ -745,16 +757,29 @@ lval* lval_call(lenv* e, lval* f, lval* a)
 
 	lval_del(a);
 
+	if (f->formals->count > 0 && strcmp(f->formals->cell[0]->symbol, "&") == 0) {
+		if (f->formals->count != 2) {
+			return lval_error("Function format invalid. "
+				"Symbol '&' not followed by single symbol.");
+		}
+
+		lval_del(lval_pop(f->formals, 0));
+
+		lval* sym = lval_pop(f->formals, 0);
+		lval* val = lval_qexpr();
+
+		lenv_put(f->env, sym, val);
+		lval_del(sym); lval_del(val);
+	}
+
 	if (f->formals->count == 0) {
 		f->env->par = e;
-		return builtin_eval(
-			f->env, lval_add(lval_sexpr(), lval_copy(f->body)));
+		return builtin_eval(f->env,
+			lval_add(lval_sexpr(), lval_copy(f->body)));
 	} else {
 		return lval_copy(f);
 	}
-
 }
-
 
 
 
