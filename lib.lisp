@@ -100,11 +100,9 @@
 (fun {trd l} { eval (head (tail (tail l))) })
 
 ; List Length
-(fun {len l} {
-  if (== l nil)
-    {0}
-    {+ 1 (len (tail l))}
-})
+
+(fun {len l} {foldl (\ {acc _} {+ 1 acc}) 0 l})
+
 
 ; Nth item in List
 (fun {nth n l} {
