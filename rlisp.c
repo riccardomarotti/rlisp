@@ -1027,6 +1027,13 @@ lval* lval_read(mpc_ast_t* t)
 }
 
 
+void load_standard_lib(lenv* e) {
+	lval* args = lval_add(lval_sexpr(), lval_string("lib.lisp"));
+	lval* x = builtin_load(e, args);
+	if (x->type == LVAL_ERR)
+		lval_println(x);
+	lval_del(x);
+}
 
 
 
@@ -1060,6 +1067,7 @@ int main(int argc, char** argv)
 
 	lenv* e = lenv_new();
 	lenv_add_builtins(e);
+	load_standard_lib(e);
 
 	if (argc >= 2) {
 		for (int i = 1; i < argc; i++) {
