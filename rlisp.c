@@ -1026,9 +1026,8 @@ lval* lval_read(mpc_ast_t* t)
 	return x;
 }
 
-
-void load_standard_lib(lenv* e) {
-	lval* args = lval_add(lval_sexpr(), lval_string("lib.lisp"));
+void load_from_file(lenv* e, char* filename) {
+	lval* args = lval_add(lval_sexpr(), lval_string(filename));
 	lval* x = builtin_load(e, args);
 	if (x->type == LVAL_ERR)
 		lval_println(x);
@@ -1067,15 +1066,11 @@ int main(int argc, char** argv)
 
 	lenv* e = lenv_new();
 	lenv_add_builtins(e);
-	load_standard_lib(e);
+	load_from_file(e, "lib.lisp");
 
 	if (argc >= 2) {
 		for (int i = 1; i < argc; i++) {
-			lval* args = lval_add(lval_sexpr(), lval_string(argv[i]));
-			lval* x = builtin_load(e, args);
-			if (x->type == LVAL_ERR)
-				lval_println(x);
-			lval_del(x);
+			load_from_file(e, argv[1]);
 		}
 	}
 
